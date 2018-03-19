@@ -1,9 +1,9 @@
 # docker部署步骤
 # 1: 搭建centos系统ruby环境镜像
-    ```
-    cd images/base
+   ```
+     cd images/base
      docker build -t base/centos
-    ``` 
+   ``` 
 # 2: 构建富熊项目镜像 
   ```
   cd images/fuxiong
