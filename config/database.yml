@@ -1,0 +1,25 @@
+default: &default
+  adapter: mysql2
+  # encoding: utf8
+  reconnect: false
+  pool: 100
+  #username: root
+  #password: Fx789@mall
+  #host: localhost
+
+development:
+  <<: *default
+  database: fuxiong_dev
+  username: root
+  password: 
+  host: mysql
+
+test:
+  <<: *default
+  database: fuxiong_test
+
+production:
+  <<: *default
+  host: mb-master.mysql.rds.aliyuncs.com
+  database: fuxiong
+  password: Fx789@mall

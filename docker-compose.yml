@@ -1,0 +1,109 @@
+version: "2"
+
+services:
+  mysql:
+    container_name: 'mysql'
+    image: mysql
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+      - MYSQL_ROOT_HOST=%
+      - MYSQL_USER=root
+      - MYSQL_DATABASE=fuxiong_dev
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+    command: ["mysqld", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    ports:
+      - '3306:3306'
+    restart: always
+
+  redis:
+    container_name: 'redis'
+    image: redis
+    mem_limit: 300m
+    ports:
+      - '6379:6379'
+    volumes:
+      - ./data/redis:/data
+
+  elasticsearch:
+    container_name: 'elasticsearch'
+    image: elasticsearch/fuxiong
+    environment:
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms256m -Xmx512m"
+    mem_limit: 1g
+    volumes:
+      - ./data/elasticsearch:/usr/share/elasticsearch/data
+    ports:
+      - '9200:9200'
+    #command: "./bin/elasticsearch-plugin install https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v6.2.2/elasticsearch-analysis-ik-6.2.2.zip"
+
+  nginx:
+    container_name: 'nginx'
+    image: nginx:stable
+    # links:
+    #   - app
+    #   - cms_admin
+    volumes:
+      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./config/nginx/fuxiong.conf:/etc/nginx/sites-enabled/fuxiong.conf
+    # - ./config/nginx/nginx_app.conf:/etc/nginx/sites-enabled/nginx_app.conf
+    # command: /usr/sbin/nginx
+    volumes_from:
+      - app
+    ports:
+      - '80:80'
+    restart: always
+
+  app: &app_base
+    container_name: 'fuxiong'
+    image: fuxiong/api
+    # env_file:
+    #   - app.default.env
+    #   - app.local.env
+    #   - app.secret.env
+    links:
+      - mysql
+      - redis
+      - elasticsearch
+    #   - postgresql
+    #   - memcached
+    # logging:
+    #   options:
+    #     max-size: "1g"
+    #     max-file: "10"
+    volumes:
+      - ./log:/var/www/log
+      - ./log:/var/www/fuxiong/log
+      - ./tmp:/var/www/fuxiong/tmp
+      - ./tmp/pids:/var/www/fuxiong/tmp/pids
+      - ./tmp/sockets:/var/www/fuxiong/tmp/sockets
+      - ./config/redis.yml:/var/www/fuxiong/config/redis.yml
+      - ./config/database.yml:/var/www/fuxiong/config/database.yml
+      - ./config/puma.rb:/var/www/fuxiong/config/puma.rb
+      # - ./tmp/cache/public/manage:/var/www/one_cms/public/manage
+
+    command:  /bin/bash -l -c "bundle exec puma -C config/puma.rb"
+    ports:
+      - "3000:3000"
+
+  # workers:
+  #   <<: *app_base
+  #   container_name: 'workers'
+  #   ports: []
+  #   command:  /bin/bash -l -c "bundle exec sidekiq -C config/sidekiq.yml -L /var/www/log/sidekiq.log "
+  #   restart: always
+
+
+  # app_backup:
+  #   <<: *app_base
+  #   container_name: 'homeland_app_backup'
+  #   command: bundle exec puma -C config/puma-backup.rb
+  #   ports:
+  #     - "3001:3001"
+
+  # worker:
+  #   <<: *app_base
+  #   container_name: 'cms_worker'
+  #   ports: []
+  #   command: bundle exec sidekiq -C config/sidekiq.yml -L /var/www/log/sidekiq.log

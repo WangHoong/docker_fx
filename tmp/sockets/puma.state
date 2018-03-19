@@ -1,0 +1,4 @@
+---
+pid: 1
+control_url: unix:///var/www/fuxiong/tmp/sockets/pumactl.sock
+control_auth_token: c57b8a6e334c86b39697ac4b36e49d
