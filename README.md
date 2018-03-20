@@ -4,7 +4,7 @@
      cd images/base
      docker build -t base/centos
    ``` 
-# 2: 构建富熊项目镜像 
+# 2: 构建项目镜像 
   ```
   cd images/fuxiong
    docker build -t fuxiong/api
